@@ -5,6 +5,7 @@ const authToken = process.env.AUTH_TOKEN;
 const serviceSid = process.env.SERVICE_SID
 const environmentSid = process.env.ENVIRONMENT_SID
 
+const sandboxNumber = "whatsapp:+14155238886"
 const client = require('twilio')(accountSid, authToken);
 
 const { getInfo } = require('ytdl-core');
@@ -24,8 +25,8 @@ app.get('/', (req, res) => {
 })
 
 app.post('/download', (req, res) => {
-    if (req.query.url) {
-        console.log(req.query.url)
+    if (req.body.url && req.body.number) {
+        console.log(req.body.url)
         console.log("Account SID", accountSid)
         console.log("Auth Token", authToken)
         console.log("Service SID", serviceSid)
@@ -140,10 +141,18 @@ app.post('/download', (req, res) => {
             console.log("Deploying...")
 
             const createDeploy = await client.serverless.v1.services(serviceSid)
-                .environments(environmentSid) 
+                .environments(environmentSid)
                 .deployments
                 .create({ buildSid: build.sid })
                 .then(deployment => deployment);
+
+            const sendMessage = await client.messages
+                .create({
+                    body: `https://mindless-thumb-5667.twil.io/${title}.mp3`,
+                    from: sandboxNumber,
+                    to: req.body.number
+                })
+                .then(message => console.log("Menssagem enviada"));
 
             console.log("Deploy completed: ", createDeploy);
             res.status(200).json({ message: "Success!", path: `https://mindless-thumb-5667.twil.io/${title}.mp3` })
@@ -157,7 +166,7 @@ app.post('/download', (req, res) => {
             await createAsset(title, url)
         }
 
-        downloader(req.query.url)
+        downloader(req.body.url)
 
         // res.status(200).json({ message: "Success!" })
     } else {
