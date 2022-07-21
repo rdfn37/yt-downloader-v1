@@ -69,12 +69,12 @@ app.post('/download', (req, res) => {
                 .then((response) => {
                     const newVersionSid = response.data.sid;
 
-                    updateBuild(newVersionSid)
+                    updateBuild(newVersionSid, title)
                 });
         }
 
         // 3 - Create new build
-        const updateBuild = async (assetSid) => {
+        const updateBuild = async (assetSid, title) => {
             console.log("Updating build...");
 
             const environment = await client.serverless.v1.services(serviceSid)
@@ -103,11 +103,11 @@ app.post('/download', (req, res) => {
                     functionVersions: [],
                     assetVersions: updatedAssets(currentBuild)
                 })
-                .then(build => fetchBuildStatus(build));
+                .then(build => fetchBuildStatus(build, title));
         }
 
         // 4 - Build Status
-        const fetchBuildStatus = async (build) => {
+        const fetchBuildStatus = async (build, title) => {
             console.log("Checking build status...")
 
             let status = ""
@@ -124,7 +124,7 @@ app.post('/download', (req, res) => {
                             console.log("Building status: ", status)
 
                             stopInterval()
-                            deploy(build)
+                            deploy(build, title)
                         }
                     });
             }
@@ -136,16 +136,17 @@ app.post('/download', (req, res) => {
         }
 
         // 5 - Deploy
-        const deploy = async (build) => {
+        const deploy = async (build, title) => {
             console.log("Deploying...")
 
             const createDeploy = await client.serverless.v1.services(serviceSid)
-                .environments(environmentSid)
+                .environments(environmentSid) 
                 .deployments
                 .create({ buildSid: build.sid })
                 .then(deployment => deployment);
 
             console.log("Deploy completed: ", createDeploy);
+            res.status(200).json({ message: "Success!", path: `https://mindless-thumb-5667.twil.io/${title}.mp3` })
         }
 
         // Run Function
@@ -158,7 +159,7 @@ app.post('/download', (req, res) => {
 
         downloader(req.query.url)
 
-        res.status(200).json({ message: "Success!" })
+        // res.status(200).json({ message: "Success!" })
     } else {
         console.log("Error!")
         res.status(400).json({ message: "Error!" })
