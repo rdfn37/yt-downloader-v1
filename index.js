@@ -98,10 +98,18 @@ app.post('/download', (req, res) => {
                 return assets
             }
 
+            const updateFunctions = (build) => {
+                let functions = []
+
+                build.functionVersions.forEach(e => functions.push(e.sid))
+
+                return functions
+            }
+
             const newBuild = await client.serverless.v1.services(serviceSid)
                 .builds
                 .create({
-                    functionVersions: [],
+                    functionVersions: updateFunctions(currentBuild),
                     assetVersions: updatedAssets(currentBuild)
                 })
                 .then(build => fetchBuildStatus(build, title));

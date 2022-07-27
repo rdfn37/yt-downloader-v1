@@ -1,0 +1,83 @@
+{
+    "description": "A New Flow",
+    "states": [
+        {
+            "name": "Trigger",
+            "type": "trigger",
+            "transitions": [
+                {
+                    "next": "send_message_1",
+                    "event": "incomingMessage"
+                },
+                {
+                    "event": "incomingCall"
+                },
+                {
+                    "event": "incomingConversationMessage"
+                },
+                {
+                    "event": "incomingRequest"
+                },
+                {
+                    "event": "incomingParent"
+                }
+            ],
+            "properties": {
+                "offset": {
+                    "x": 20,
+                    "y": -200
+                }
+            }
+        },
+        {
+            "name": "send_message_1",
+            "type": "send-message",
+            "transitions": [
+                {
+                    "next": "http_1",
+                    "event": "sent"
+                },
+                {
+                    "event": "failed"
+                }
+            ],
+            "properties": {
+                "offset": {
+                    "x": -170,
+                    "y": 0
+                },
+                "service": "{{trigger.message.InstanceSid}}",
+                "channel": "{{trigger.message.ChannelSid}}",
+                "from": "{{flow.channel.address}}",
+                "to": "{{contact.channel.address}}",
+                "body": "Aguarde um momento enquanto baixamos sua música.\nEsse processo tende a demorar entre 10 e 15 segundos."
+            }
+        },
+        {
+            "name": "http_1",
+            "type": "make-http-request",
+            "transitions": [
+                {
+                    "event": "success"
+                },
+                {
+                    "event": "failed"
+                }
+            ],
+            "properties": {
+                "offset": {
+                    "x": -280,
+                    "y": 280
+                },
+                "method": "POST",
+                "content_type": "application/json;charset=utf-8",
+                "body": "{\n    \"url\": \"{{trigger.message.Body}}\",\n    \"number\": \"{{contact.channel.address}}\"\n}",
+                "url": "https://yt-downloader-v1.herokuapp.com/download"
+            }
+        }
+    ],
+    "initial_state": "Trigger",
+    "flags": {
+        "allow_concurrent_calls": true
+    }
+}
